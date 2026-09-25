@@ -40,26 +40,33 @@ export default function RedTeamPage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
-    getProjects().then((pList) => {
-      setProjects(pList);
-      if (pList.length > 0) setSelectedProjectId(pList[0].id);
-    });
+    getProjects()
+      .then((pList) => {
+        const safeP = Array.isArray(pList) ? pList : [];
+        setProjects(safeP);
+        if (safeP.length > 0) setSelectedProjectId(safeP[0].id);
+      })
+      .catch(console.error);
   }, []);
 
   useEffect(() => {
     if (!selectedProjectId) return;
-    Promise.all([getPrompts(selectedProjectId), getTestSuites(selectedProjectId)]).then(([pr, st]) => {
-      setPrompts(pr);
-      setSuites(st);
-      if (pr.length > 0) {
-        setSelectedPromptId(pr[0].id);
-        setPromptContent(pr[0].content);
-      } else {
-        setSelectedPromptId("");
-        setPromptContent("");
-      }
-      if (st.length > 0) setTargetSuiteId(st[0].id);
-    });
+    Promise.all([getPrompts(selectedProjectId), getTestSuites(selectedProjectId)])
+      .then(([pr, st]) => {
+        const safePr = Array.isArray(pr) ? pr : [];
+        const safeSt = Array.isArray(st) ? st : [];
+        setPrompts(safePr);
+        setSuites(safeSt);
+        if (safePr.length > 0) {
+          setSelectedPromptId(safePr[0].id);
+          setPromptContent(safePr[0].content);
+        } else {
+          setSelectedPromptId("");
+          setPromptContent("");
+        }
+        if (safeSt.length > 0) setTargetSuiteId(safeSt[0].id);
+      })
+      .catch(console.error);
   }, [selectedProjectId]);
 
   const handlePromptSelect = (pId: string) => {

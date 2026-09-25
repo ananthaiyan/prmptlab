@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getProjects, createProject, getEvaluations, getSubscription } from "@/lib/api";
+import { getProjects, createProject, getEvaluations, getSubscription, setAuthToken } from "@/lib/api";
 import { SignUpButton, SignInButton, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { ArrowRight, FolderKanban, Plus, Activity, ShieldAlert, Zap, Clock, Check, Terminal, FileText, Bug } from "lucide-react";

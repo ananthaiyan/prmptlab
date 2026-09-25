@@ -17,7 +17,7 @@ export default function SettingsPage() {
     Promise.all([getSubscription(), getProjects()])
       .then(([s, p]) => {
         setSub(s);
-        setProjectsCount(p.length);
+        setProjectsCount(Array.isArray(p) ? p.length : 0);
       })
       .catch(console.error)
       .finally(() => setLoading(false));

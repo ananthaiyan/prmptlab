@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getEvaluationResults, API_BASE } from "@/lib/api";
+import { getEvaluationResults, getEvaluation } from "@/lib/api";
 import Link from "next/link";
 import { CheckCircle2, XCircle, ChevronRight, Activity, Clock, ShieldAlert, Cpu } from "lucide-react";
 
@@ -17,13 +17,12 @@ export default function RunPage() {
 
   useEffect(() => {
     // Fetch run details
-    fetch(`${API_BASE}/evaluations/${id}`)
-      .then(res => res.json())
+    getEvaluation(id)
       .then(r => {
         setRun(r);
         return getEvaluationResults(id);
       })
-      .then(setResults)
+      .then(res => setResults(Array.isArray(res) ? res : []))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [id]);

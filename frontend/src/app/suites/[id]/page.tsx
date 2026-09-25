@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getTestCases, createTestCase, API_BASE } from "@/lib/api";
+import { getTestCases, getTestSuite, createTestCase } from "@/lib/api";
 import Link from "next/link";
 import { ChevronRight, Plus, AlertCircle } from "lucide-react";
 
@@ -27,13 +27,12 @@ export default function SuitePage() {
   const [tcSeverity, setTcSeverity] = useState("medium");
 
   const loadData = () => {
-    fetch(`${API_BASE}/test-suites/${id}`)
-      .then(res => res.json())
+    getTestSuite(id)
       .then(setSuite)
       .catch(console.error);
       
     getTestCases(id)
-      .then(setTestCases)
+      .then(res => setTestCases(Array.isArray(res) ? res : []))
       .catch(console.error)
       .finally(() => setLoading(false));
   };

@@ -19,8 +19,8 @@ export default function EvaluationsPage() {
   useEffect(() => {
     Promise.all([getEvaluations(), getProjects()])
       .then(([e, p]) => {
-        setEvaluations(e);
-        setProjects(p);
+        setEvaluations(Array.isArray(e) ? e : []);
+        setProjects(Array.isArray(p) ? p : []);
       })
       .catch(console.error)
       .finally(() => setLoading(false));

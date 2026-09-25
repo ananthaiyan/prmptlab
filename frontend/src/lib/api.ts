@@ -74,6 +74,10 @@ export async function getTestSuites(projectId: string) {
   return fetchWithAuth(`${API_BASE}/projects/${projectId}/test-suites`);
 }
 
+export async function getTestSuite(id: string) {
+  return fetchWithAuth(`${API_BASE}/test-suites/${id}`);
+}
+
 export async function getTestCases(suiteId: string) {
   return fetchWithAuth(`${API_BASE}/test-suites/${suiteId}/test-cases`);
 }
@@ -81,6 +85,10 @@ export async function getTestCases(suiteId: string) {
 export async function getEvaluations(projectId?: string) {
   const url = projectId ? `${API_BASE}/evaluations?project_id=${projectId}` : `${API_BASE}/evaluations`;
   return fetchWithAuth(url);
+}
+
+export async function getEvaluation(id: string) {
+  return fetchWithAuth(`${API_BASE}/evaluations/${id}`);
 }
 
 export async function runEvaluation(promptId: string, suiteId: string, model: string = "qwen/qwen3.8-27b") {

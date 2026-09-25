@@ -1,11 +1,19 @@
 "use client";
 
+import { useEffect } from "react";
 import { useUser, UserButton, SignInButton, SignUpButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { FolderKanban, Activity, ShieldAlert, Settings as SettingsIcon, Zap } from "lucide-react";
+import { setAuthToken } from "@/lib/api";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
-  const { isSignedIn, isLoaded } = useUser();
+  const { isSignedIn, isLoaded, user } = useUser();
+
+  useEffect(() => {
+    if (user?.id) {
+      setAuthToken(null, user.id);
+    }
+  }, [user?.id]);
 
   if (!isLoaded) {
     return (

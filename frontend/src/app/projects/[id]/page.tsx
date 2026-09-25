@@ -53,13 +53,18 @@ export default function ProjectPage() {
     ])
       .then(([p, pr, s, e, m]) => {
         setProject(p);
-        setPrompts(pr);
-        setSuites(s);
-        setEvals(e);
-        setModels(m);
-        if (pr.length > 0 && !selectedPrompt) setSelectedPrompt(pr[0].id);
-        if (s.length > 0 && !selectedSuite) setSelectedSuite(s[0].id);
-        if (!selectedModel) setSelectedModel(m.default || m.models[0]);
+        const safePr = Array.isArray(pr) ? pr : [];
+        const safeS = Array.isArray(s) ? s : [];
+        const safeE = Array.isArray(e) ? e : [];
+        const safeM = m && typeof m === "object" ? m : { models: [], default: "qwen/qwen3.8-27b" };
+
+        setPrompts(safePr);
+        setSuites(safeS);
+        setEvals(safeE);
+        setModels(safeM);
+        if (safePr.length > 0 && !selectedPrompt) setSelectedPrompt(safePr[0].id);
+        if (safeS.length > 0 && !selectedSuite) setSelectedSuite(safeS[0].id);
+        if (!selectedModel && safeM) setSelectedModel(safeM.default || (safeM.models && safeM.models[0]) || "qwen/qwen3.8-27b");
       })
       .catch(console.error)
       .finally(() => setLoading(false));
