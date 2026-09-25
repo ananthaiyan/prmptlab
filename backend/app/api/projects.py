@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, or_
 
+from app.api.auth import UserContext, get_current_user, verify_project_access
 from app.db.database import get_db
-from app.db.models import Project, Prompt, TestSuite, TestCase, EvaluationRun
+from app.db.models import EvaluationRun, Project, Prompt, TestCase, TestSuite
 from app.schemas.project import ProjectCreate, ProjectResponse
-from app.api.auth import get_current_user, UserContext, verify_project_access
 from app.services.entitlements import check_can_create_project
 
 router = APIRouter(prefix="/api/projects", tags=["Projects"])

@@ -8,6 +8,7 @@ to an LLM and asks it to score the response across multiple criteria.
 import json
 import logging
 from dataclasses import dataclass
+
 from app.services.model_provider import ModelProvider
 
 logger = logging.getLogger(__name__)

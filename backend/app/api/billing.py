@@ -1,18 +1,18 @@
-import hmac
 import hashlib
+import hmac
 import logging
-import httpx
-from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, Request, Header
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from pydantic import BaseModel
 
+import httpx
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.auth import UserContext, get_current_user
+from app.config import get_settings
 from app.db.database import get_db
 from app.db.models import Subscription
-from app.api.auth import get_current_user, UserContext
-from app.services.entitlements import get_user_usage, PLAN_LIMITS
-from app.config import get_settings
+from app.services.entitlements import get_user_usage
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/billing", tags=["Billing"])

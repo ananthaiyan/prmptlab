@@ -1,11 +1,19 @@
 import logging
+from datetime import UTC, datetime
 from typing import Any
-from datetime import datetime, timezone
-from fastapi import HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
 
-from app.db.models import Project, Prompt, TestSuite, TestCase, EvaluationRun, Subscription
+from fastapi import HTTPException
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.db.models import (
+    EvaluationRun,
+    Project,
+    Prompt,
+    Subscription,
+    TestCase,
+    TestSuite,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -89,8 +97,8 @@ async def get_user_usage(user_id: str, db: AsyncSession) -> dict:
     projects_count = proj_res.scalar() or 0
 
     # Count evaluations this month
-    now = datetime.now(timezone.utc)
-    first_of_month = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
+    now = datetime.now(UTC)
+    first_of_month = datetime(now.year, now.month, 1, tzinfo=UTC)
     
     # User's projects
     user_proj_stmt = select(Project.id).where(Project.user_id == user_id)

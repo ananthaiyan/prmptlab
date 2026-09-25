@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
 
+from app.api.auth import UserContext, get_current_user, verify_project_access
 from app.db.database import get_db
-from app.db.models import TestSuite, TestCase
+from app.db.models import TestCase, TestSuite
 from app.schemas.test_case import TestSuiteCreate, TestSuiteResponse
-from app.api.auth import get_current_user, UserContext, verify_project_access
 from app.services.entitlements import check_can_create_suite
 
 router = APIRouter(tags=["Test Suites"])

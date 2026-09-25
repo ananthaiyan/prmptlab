@@ -1,17 +1,18 @@
 import logging
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.auth import UserContext, get_current_user, verify_project_access
+from app.config import get_settings
 from app.db.database import get_db
-from app.db.models import EvaluationRun, EvaluationResult, TestCase, Prompt, Project
+from app.db.models import EvaluationResult, EvaluationRun, Project, Prompt, TestCase
 from app.schemas.evaluation import EvaluationRequest, EvaluationRunResponse
 from app.schemas.result import EvaluationResultResponse
+from app.services.evaluation_engine import EvaluationEngine
 from app.services.groq_provider import GroqProvider
 from app.services.judge import JudgeService
-from app.services.evaluation_engine import EvaluationEngine
-from app.config import get_settings
-from app.api.auth import get_current_user, UserContext, verify_project_access
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/evaluations", tags=["Evaluations"])

@@ -6,11 +6,21 @@ Main FastAPI application entry point.
 
 import logging
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api import (
+    billing,
+    evaluations,
+    models,
+    projects,
+    prompts,
+    redteam,
+    test_cases,
+    test_suites,
+)
 from app.db.database import init_db
-from app.api import projects, prompts, test_suites, test_cases, evaluations, models, redteam, billing
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 

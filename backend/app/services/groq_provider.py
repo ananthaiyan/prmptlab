@@ -5,12 +5,14 @@ Uses the official Groq Python SDK with async support.
 All timing is done with perf_counter for high-resolution latency measurement.
 """
 
-import time
 import logging
+import time
 from typing import Any
-from groq import AsyncGroq, APIError, RateLimitError, APITimeoutError
-from app.services.model_provider import ModelProvider, ModelResponse
+
+from groq import APIError, APITimeoutError, AsyncGroq, RateLimitError
+
 from app.config import get_settings
+from app.services.model_provider import ModelProvider, ModelResponse
 
 logger = logging.getLogger(__name__)
 

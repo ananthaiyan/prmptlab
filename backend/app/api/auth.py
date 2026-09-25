@@ -1,10 +1,10 @@
-import jwt
 import logging
-from fastapi import Header, HTTPException, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
-from app.db.database import get_db
+import jwt
+from fastapi import Header, HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.db.models import Project
 
 logger = logging.getLogger(__name__)

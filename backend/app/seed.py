@@ -5,9 +5,9 @@ Run: python -m app.seed
 """
 
 import asyncio
-from app.db.database import async_session, init_db
-from app.db.models import Project, Prompt, TestSuite, TestCase
 
+from app.db.database import async_session, init_db
+from app.db.models import Project, Prompt, TestCase, TestSuite
 
 SYSTEM_PROMPT_V1 = """You are a telecom customer support agent for TelcoMax.
 
@@ -190,7 +190,7 @@ async def seed():
 
         await db.commit()
         print(f"Seeded project: {project.name} ({project.id})")
-        print(f"  - 2 prompt versions")
+        print("  - 2 prompt versions")
         print(f"  - 1 test suite with {len(TEST_CASES)} test cases")
 
 

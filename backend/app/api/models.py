@@ -1,7 +1,9 @@
 import logging
-from fastapi import APIRouter, HTTPException
-from app.services.groq_provider import GroqProvider
+
+from fastapi import APIRouter
+
 from app.config import get_settings
+from app.services.groq_provider import GroqProvider
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/models", tags=["Models"])

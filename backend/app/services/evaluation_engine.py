@@ -6,16 +6,21 @@ Designed to run sequentially in V1 but structured for async workers later.
 """
 
 import logging
-from datetime import datetime, timezone
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from datetime import UTC, datetime
 
-from app.db.models import (
-    Prompt, TestSuite, TestCase, EvaluationRun, EvaluationResult,
-)
-from app.services.model_provider import ModelProvider
-from app.services.judge import JudgeService
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.config import get_settings
+from app.db.models import (
+    EvaluationResult,
+    EvaluationRun,
+    Prompt,
+    TestCase,
+    TestSuite,
+)
+from app.services.judge import JudgeService
+from app.services.model_provider import ModelProvider
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +110,7 @@ class EvaluationEngine:
             model=model,
             status="running",
             total_tests=len(test_cases),
-            started_at=datetime.now(timezone.utc),
+            started_at=datetime.now(UTC),
         )
         db.add(run)
         await db.flush()
@@ -135,7 +140,7 @@ class EvaluationEngine:
         run.failed_tests = failed
         run.overall_score = round(total_score / len(test_cases), 2) if test_cases else 0
         run.status = "completed"
-        run.completed_at = datetime.now(timezone.utc)
+        run.completed_at = datetime.now(UTC)
 
         await db.commit()
         await db.refresh(run)

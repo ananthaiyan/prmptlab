@@ -1,13 +1,14 @@
 import logging
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel
 
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.config import get_settings
 from app.db.database import get_db
 from app.db.models import Prompt
 from app.services.groq_provider import GroqProvider
 from app.services.redteam import RedTeamService
-from app.config import get_settings
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/redteam", tags=["Red Team"])

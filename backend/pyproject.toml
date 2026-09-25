@@ -1,0 +1,15 @@
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+ignore = [
+    "B008",   # Do not perform function call `Depends` in argument defaults (FastAPI standard)
+    "BLE001", # Blind exception catching
+    "LOG015", # logging.info on root logger
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_classes = ["*Test"]
