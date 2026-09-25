@@ -61,6 +61,7 @@ class Prompt(Base):
 
 
 class TestSuite(Base):
+    __test__ = False
     __tablename__ = "test_suites"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
@@ -74,6 +75,7 @@ class TestSuite(Base):
 
 
 class TestCase(Base):
+    __test__ = False
     __tablename__ = "test_cases"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)

@@ -7,6 +7,7 @@ All timing is done with perf_counter for high-resolution latency measurement.
 
 import time
 import logging
+from typing import Any
 from groq import AsyncGroq, APIError, RateLimitError, APITimeoutError
 from app.services.model_provider import ModelProvider, ModelResponse
 from app.config import get_settings
@@ -32,7 +33,7 @@ class GroqProvider(ModelProvider):
         temperature: float = 0.0,
         max_tokens: int = 2048,
     ) -> ModelResponse:
-        messages = [
+        messages: Any = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_input},
         ]

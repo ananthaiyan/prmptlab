@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 from datetime import datetime, timezone
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,7 +9,7 @@ from app.db.models import Project, Prompt, TestSuite, TestCase, EvaluationRun, S
 
 logger = logging.getLogger(__name__)
 
-PLAN_LIMITS = {
+PLAN_LIMITS: dict[str, dict[str, Any]] = {
     "FREE": {
         "projects": 3,
         "suites_per_project": 1,

@@ -4,11 +4,13 @@ from typing import Literal
 
 
 class TestSuiteCreate(BaseModel):
+    __test__ = False
     name: str = Field(..., min_length=1, max_length=255)
     description: str = ""
 
 
 class TestSuiteResponse(BaseModel):
+    __test__ = False
     id: str
     project_id: str
     name: str
@@ -20,6 +22,7 @@ class TestSuiteResponse(BaseModel):
 
 
 class TestCaseCreate(BaseModel):
+    __test__ = False
     name: str = Field(..., min_length=1, max_length=255)
     input: str = Field(..., min_length=1)
     expected_behavior: str = ""
@@ -30,6 +33,7 @@ class TestCaseCreate(BaseModel):
 
 
 class TestCaseUpdate(BaseModel):
+    __test__ = False
     name: str | None = None
     input: str | None = None
     expected_behavior: str | None = None
@@ -40,6 +44,7 @@ class TestCaseUpdate(BaseModel):
 
 
 class TestCaseResponse(BaseModel):
+    __test__ = False
     id: str
     suite_id: str
     name: str
