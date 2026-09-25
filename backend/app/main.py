@@ -1,0 +1,57 @@
+"""
+prmptlab — LLM System-Prompt Evaluation Platform
+
+Main FastAPI application entry point.
+"""
+
+import logging
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.db.database import init_db
+from app.api import projects, prompts, test_suites, test_cases, evaluations, models, redteam, billing
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: create tables
+    await init_db()
+    logging.info("Database tables created/verified")
+    yield
+    # Shutdown
+    logging.info("Shutting down prmptlab")
+
+
+app = FastAPI(
+    title="prmptlab",
+    description="LLM System-Prompt Evaluation & Red-Teaming Platform",
+    version="2.0.0",
+    lifespan=lifespan,
+)
+
+# CORS — allow frontend dev server
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Mount routers
+app.include_router(projects.router)
+app.include_router(prompts.router)
+app.include_router(test_suites.router)
+app.include_router(test_cases.router)
+app.include_router(evaluations.router)
+app.include_router(models.router)
+app.include_router(redteam.router)
+app.include_router(billing.router)
+
+
+@app.get("/api/health", tags=["Health"])
+async def health():
+    return {"status": "ok", "app": "prmptlab", "version": "2.0.0"}
