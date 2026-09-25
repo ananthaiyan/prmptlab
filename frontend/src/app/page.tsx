@@ -25,15 +25,29 @@ export default function Home() {
   const [limitModalOpen, setLimitModalOpen] = useState(false);
   const [limitDetails, setLimitDetails] = useState<any>({});
 
-  const loadDashboardData = () => {
-    Promise.all([getProjects(), getEvaluations(), getSubscription()])
-      .then(([pList, eList, sData]) => {
-        setProjects(pList);
-        setEvaluations(eList);
-        setSub(sData);
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+  // Wire Clerk user ID into API client so backend can identify the tenant
+  useEffect(() => {
+    if (user?.id) {
+      setAuthToken(null, user.id);
+    }
+  }, [user?.id]);
+
+  const loadDashboardData = async () => {
+    // Fetch each endpoint independently so a single failure doesn't crash the dashboard
+    const safeGet = async (fn: () => Promise<any>, fallback: any) => {
+      try { return await fn(); } catch { return fallback; }
+    };
+
+    const [pList, eList, sData] = await Promise.all([
+      safeGet(getProjects, []),
+      safeGet(getEvaluations, []),
+      safeGet(getSubscription, null),
+    ]);
+
+    setProjects(Array.isArray(pList) ? pList : []);
+    setEvaluations(Array.isArray(eList) ? eList : []);
+    setSub(sData);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -62,12 +76,15 @@ export default function Home() {
         setLimitDetails(err);
         setLimitModalOpen(true);
       } else {
-        setCreateError(err.message || "Failed to create project");
+        // Safely stringify — avoids "[object Event]" for DOM/network error events
+        const msg = err instanceof Error ? err.message : typeof err === "string" ? err : "Failed to create project";
+        setCreateError(msg);
       }
     } finally {
       setCreating(false);
     }
   };
+
 
   if (!isLoaded) {
     return (
