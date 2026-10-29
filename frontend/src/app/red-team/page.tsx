@@ -2,22 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getProjects, getPrompts, getTestSuites, generateRedTeamTests, createBulkTestCases } from "@/lib/api";
-import { ShieldAlert, Clock, Plus, Check, Sparkles, AlertCircle } from "lucide-react";
-
-const CATEGORIES = [
-  "Prompt Injection",
-  "Ambiguity",
-  "Contradiction",
-  "Hostility",
-  "Hallucination",
-  "Missing Information",
-  "Context Switching",
-  "Off-topic",
-  "Language Switching",
-  "Safety",
-  "Instruction Following",
-  "Tool Abuse",
-];
+import { ShieldAlert, Clock, Plus, Check, Sparkles, AlertCircle, RotateCcw } from "lucide-react";
 
 export default function RedTeamPage() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -126,57 +111,55 @@ export default function RedTeamPage() {
   };
 
   return (
-    <div>
-      <div className="flex justify-between items-start mb-8">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#222222] pb-5">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight mb-2 text-white flex items-center gap-3">
-            <ShieldAlert className="w-7 h-7 text-purple-400" /> Red Team Workbench
-          </h2>
-          <p className="text-neutral-400 max-w-2xl">
-            Find the ways your AI agent can fail before your users do. Automatically generate adversarial edge cases and injection attacks based on your system prompt instructions.
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono px-2 py-0.5 rounded bg-white text-black font-semibold">SECURITY</span>
+            <h1 className="text-2xl font-bold tracking-tight text-white">Red Team Adversarial Attacks</h1>
+          </div>
+          <p className="text-xs text-neutral-400 mt-1">
+            Automatically generate edge-case attacks for prompt injections, DAN jailbreaks, system extraction, and policy bypasses.
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Controls Column */}
-        <div className="border border-[#333333] rounded-xl bg-[#141414] p-6 space-y-5 h-fit">
-          <h3 className="font-semibold text-lg text-white mb-2">Generation Setup</h3>
+        <div className="border border-[#262626] rounded-xl bg-[#111111] p-5 space-y-4 h-fit">
+          <span className="text-xs font-mono uppercase text-neutral-400 font-semibold block">Generation Setup</span>
 
           <div>
-            <label className="block text-xs font-medium text-neutral-400 mb-1.5">Project</label>
+            <label className="block text-[11px] font-mono text-neutral-400 mb-1">Target Agent Profile</label>
             <select
-              className="w-full bg-[#0a0a0a] border border-[#333333] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
+              className="w-full bg-[#0a0a0a] border border-[#333333] rounded px-3 py-1.5 text-xs text-white focus:outline-none"
               value={selectedProjectId}
               onChange={(e) => setSelectedProjectId(e.target.value)}
             >
               {projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
+                <option key={p.id} value={p.id}>{p.name}</option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-neutral-400 mb-1.5">Select System Prompt</label>
+            <label className="block text-[11px] font-mono text-neutral-400 mb-1">Select System Prompt</label>
             <select
-              className="w-full bg-[#0a0a0a] border border-[#333333] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
+              className="w-full bg-[#0a0a0a] border border-[#333333] rounded px-3 py-1.5 text-xs text-white focus:outline-none"
               value={selectedPromptId}
               onChange={(e) => handlePromptSelect(e.target.value)}
             >
               {prompts.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name} (v{p.version})
-                </option>
+                <option key={p.id} value={p.id}>{p.name} (v{p.version})</option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-neutral-400 mb-1.5">System Prompt Content</label>
+            <label className="block text-[11px] font-mono text-neutral-400 mb-1">System Prompt Content</label>
             <textarea
-              className="w-full bg-[#0a0a0a] border border-[#333333] rounded-md px-3 py-2 text-xs text-neutral-300 font-mono focus:outline-none focus:border-purple-500"
+              className="w-full bg-[#0a0a0a] border border-[#333333] rounded p-2.5 text-xs text-neutral-200 font-mono focus:outline-none leading-relaxed"
               rows={6}
               value={promptContent}
               onChange={(e) => setPromptContent(e.target.value)}
@@ -185,20 +168,20 @@ export default function RedTeamPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-neutral-400 mb-1.5">Number of Tests</label>
+            <label className="block text-[11px] font-mono text-neutral-400 mb-1">Number of Attack Cases</label>
             <select
-              className="w-full bg-[#0a0a0a] border border-[#333333] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
+              className="w-full bg-[#0a0a0a] border border-[#333333] rounded px-3 py-1.5 text-xs text-white focus:outline-none"
               value={testCount}
               onChange={(e) => setTestCount(Number(e.target.value))}
             >
-              <option value={5}>5 Test Cases</option>
-              <option value={10}>10 Test Cases</option>
-              <option value={15}>15 Test Cases</option>
+              <option value={5}>5 Adversarial Cases</option>
+              <option value={10}>10 Adversarial Cases</option>
+              <option value={15}>15 Adversarial Cases</option>
             </select>
           </div>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-md text-xs flex gap-2">
+            <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-2.5 rounded text-xs flex gap-2 font-mono">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <p>{error}</p>
             </div>
@@ -207,110 +190,96 @@ export default function RedTeamPage() {
           <button
             onClick={handleGenerate}
             disabled={generating}
-            className="w-full bg-purple-600 hover:bg-purple-500 text-white font-medium py-2.5 px-4 rounded-md text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full bg-white text-black hover:bg-neutral-200 font-bold font-mono py-2.5 px-4 rounded text-xs transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {generating ? (
               <>
-                <Clock className="w-4 h-4 animate-spin" /> Generating Tests...
+                <RotateCcw className="w-3.5 h-3.5 animate-spin text-black" /> Generating Adversarial Tests...
               </>
             ) : (
               <>
-                <Sparkles className="w-4 h-4" /> Generate Adversarial Tests
+                <ShieldAlert className="w-3.5 h-3.5 text-black" /> GENERATE ATTACKS
               </>
             )}
           </button>
         </div>
 
-        {/* Generated Tests Table Column */}
-        <div className="lg:col-span-2 space-y-6">
+        {/* Generated Tests Column */}
+        <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-lg text-white">
-              Generated Test Cases ({generatedTests.length})
-            </h3>
+            <span className="text-xs font-mono uppercase text-neutral-400 font-semibold">
+              Generated Attack Test Cases ({generatedTests.length})
+            </span>
             {generatedTests.length > 0 && (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <select
-                  className="bg-[#1a1a1a] border border-[#333333] rounded-md px-3 py-1.5 text-xs text-white"
+                  className="bg-[#111111] border border-[#333333] rounded px-2.5 py-1.5 text-xs text-white"
                   value={targetSuiteId}
                   onChange={(e) => setTargetSuiteId(e.target.value)}
                 >
                   {suites.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      Add to {s.name}
-                    </option>
+                    <option key={s.id} value={s.id}>Add to {s.name}</option>
                   ))}
                 </select>
                 <button
                   onClick={handleSaveToSuite}
                   disabled={saving || selectedTests.size === 0}
-                  className="bg-white text-black hover:bg-neutral-200 px-3 py-1.5 rounded text-xs font-medium transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                  className="bg-white text-black hover:bg-neutral-200 px-3 py-1.5 rounded text-xs font-bold font-mono transition-colors disabled:opacity-50 flex items-center gap-1.5"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Save Selected ({selectedTests.size})
+                  <Plus className="w-3.5 h-3.5 text-black" /> Save ({selectedTests.size})
                 </button>
               </div>
             )}
           </div>
 
           {saveSuccess && (
-            <div className="bg-green-500/10 border border-green-500/20 text-green-400 p-3 rounded-md text-xs flex items-center gap-2">
-              <Check className="w-4 h-4 text-green-500" />
-              <span>Selected tests successfully added to Test Suite!</span>
+            <div className="p-3 bg-green-500/10 border border-green-500/20 text-green-400 rounded-lg text-xs font-mono flex items-center gap-2">
+              <Check className="w-4 h-4 text-green-400" />
+              Successfully saved attack cases to suite!
             </div>
           )}
 
           {generatedTests.length === 0 ? (
-            <div className="border border-[#333333] rounded-xl p-12 text-center bg-[#141414]">
-              <ShieldAlert className="w-12 h-12 text-neutral-600 mx-auto mb-4" />
-              <h4 className="font-medium text-white mb-1">No Tests Generated Yet</h4>
-              <p className="text-neutral-400 text-sm max-w-sm mx-auto">
-                Select your system prompt on the left and click "Generate Adversarial Tests" to find hidden vulnerabilities.
+            <div className="border border-[#262626] rounded-xl bg-[#111111] p-12 text-center text-neutral-500 space-y-2">
+              <ShieldAlert className="w-8 h-8 mx-auto text-neutral-600" />
+              <p className="text-xs font-mono">
+                Click "Generate Attacks" to automatically synthesize adversarial test vectors for this prompt.
               </p>
             </div>
           ) : (
-            <div className="border border-[#333333] rounded-xl bg-[#141414] overflow-hidden divide-y divide-[#333333]">
+            <div className="space-y-3 max-h-[600px] overflow-y-auto">
               {generatedTests.map((t, idx) => (
                 <div
                   key={idx}
-                  className={`p-4 transition-colors flex items-start gap-4 ${
-                    selectedTests.has(idx) ? "bg-[#1a1a1a]" : "bg-[#141414]"
+                  onClick={() => toggleSelectTest(idx)}
+                  className={`p-4 rounded-xl border transition-colors cursor-pointer text-xs font-mono space-y-2 ${
+                    selectedTests.has(idx)
+                      ? "bg-[#141414] border-white/40"
+                      : "bg-[#0d0d0d] border-[#222222] opacity-60"
                   }`}
                 >
-                  <input
-                    type="checkbox"
-                    checked={selectedTests.has(idx)}
-                    onChange={() => toggleSelectTest(idx)}
-                    className="mt-1 accent-purple-500"
-                  />
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-white text-sm">{t.name}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-mono uppercase bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded">
-                          {t.category || "adversarial"}
-                        </span>
-                        <span
-                          className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded ${
-                            t.severity === "critical"
-                              ? "bg-red-500/10 text-red-400 border border-red-500/20"
-                              : "bg-orange-500/10 text-orange-400 border border-orange-500/20"
-                          }`}
-                        >
-                          {t.severity || "medium"}
-                        </span>
-                      </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedTests.has(idx)}
+                        onChange={() => {}}
+                        className="accent-white"
+                      />
+                      <span className="font-bold text-white">{t.name}</span>
                     </div>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-[#1f1f1f] text-neutral-300 border border-[#333333]">
+                      {t.category || "Red Team"}
+                    </span>
+                  </div>
 
-                    <div>
-                      <span className="text-xs text-neutral-500 block mb-0.5">Input:</span>
-                      <p className="text-xs font-mono text-neutral-300 bg-[#0a0a0a] p-2 rounded border border-[#222222]">
-                        {t.input}
-                      </p>
-                    </div>
+                  <div className="text-neutral-300 bg-[#0a0a0a] p-2.5 rounded border border-[#222222]">
+                    <span className="text-neutral-500 block mb-0.5">Attack Input:</span>
+                    "{t.input}"
+                  </div>
 
-                    <div>
-                      <span className="text-xs text-neutral-500 block mb-0.5">Expected Behavior:</span>
-                      <p className="text-xs text-neutral-400">{t.expected_behavior}</p>
-                    </div>
+                  <div className="text-neutral-400 text-[11px]">
+                    <span className="text-neutral-500">Expected Defense:</span> {t.expected_output}
                   </div>
                 </div>
               ))}

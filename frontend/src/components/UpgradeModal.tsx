@@ -12,6 +12,7 @@ interface UpgradeModalProps {
   limit?: number;
   current?: number;
   requiredPlan?: string;
+  details?: any;
 }
 
 export default function UpgradeModal({
@@ -21,8 +22,14 @@ export default function UpgradeModal({
   limit = 3,
   current = 3,
   requiredPlan = "PLUS",
+  details,
 }: UpgradeModalProps) {
   const [loading, setLoading] = useState(false);
+
+  const effectiveResource = details?.resource || resource;
+  const effectiveLimit = details?.limit || limit;
+  const effectiveCurrent = details?.current || current;
+  const effectivePlan = details?.requiredPlan || requiredPlan;
 
   if (!isOpen) return null;
 
@@ -50,16 +57,16 @@ export default function UpgradeModal({
           <X className="w-5 h-5" />
         </button>
 
-        <div className="w-12 h-12 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center mb-4">
-          <Zap className="w-6 h-6" />
+        <div className="w-12 h-12 rounded-lg bg-[#1c1c1c] border border-[#333333] text-white flex items-center justify-center mb-4">
+          <Zap className="w-6 h-6 text-white" />
         </div>
 
         <h3 className="text-xl font-semibold text-white mb-2">
-          {requiredPlan} Plan Limit Reached
+          {effectivePlan} Plan Limit Reached
         </h3>
         
         <p className="text-sm text-neutral-400 mb-6 leading-relaxed">
-          You have reached your Free plan limit of <span className="text-white font-mono">{limit}</span> {resource} (<span className="text-amber-400 font-mono">{current}/{limit}</span> used). Upgrade to <span className="text-white font-semibold">{requiredPlan}</span> for higher limits and full developer tooling.
+          You have reached your Free plan limit of <span className="text-white font-mono">{effectiveLimit}</span> {effectiveResource} (<span className="text-white font-mono font-bold">{effectiveCurrent}/{effectiveLimit}</span> used). Upgrade to <span className="text-white font-semibold">{effectivePlan}</span> for higher limits and full developer tooling.
         </p>
 
         <div className="space-y-3">

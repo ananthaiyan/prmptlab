@@ -82,7 +82,7 @@ export default function SuitePage() {
   return (
     <div>
       <div className="flex items-center gap-2 text-sm text-neutral-500 mb-6">
-        <Link href="/" className="hover:text-white transition-colors">Projects</Link>
+        <Link href="/dashboard" className="hover:text-white transition-colors">Projects</Link>
         <ChevronRight className="w-4 h-4" />
         <Link href={`/projects/${suite.project_id}`} className="hover:text-white transition-colors">Project</Link>
         <ChevronRight className="w-4 h-4" />

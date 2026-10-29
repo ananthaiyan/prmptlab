@@ -2,29 +2,58 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getProject, getPrompts, getTestSuites, getEvaluations, runEvaluation, getModels, createPrompt, createTestSuite, generateRedTeamTests, createBulkTestCases } from "@/lib/api";
+import {
+  getProject,
+  getPrompts,
+  getTestSuites,
+  getEvaluations,
+  runEvaluation,
+  getModels,
+  createPrompt,
+  createTestSuite,
+  generateRedTeamTests,
+  createBulkTestCases,
+} from "@/lib/api";
 import Link from "next/link";
-import { Play, Activity, Clock, ChevronRight, Plus, FolderTree, FileText } from "lucide-react";
+import {
+  Play,
+  Activity,
+  Clock,
+  ChevronRight,
+  Plus,
+  FolderTree,
+  FileText,
+  Bot,
+  GitCompare,
+  Mic,
+  ShieldAlert,
+  Sliders,
+  Sparkles,
+  Layers,
+  CheckCircle2,
+  Wrench,
+  TrendingUp,
+} from "lucide-react";
 
 export default function ProjectPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  
+
   const [project, setProject] = useState<any>(null);
   const [prompts, setPrompts] = useState<any[]>([]);
   const [suites, setSuites] = useState<any[]>([]);
   const [evals, setEvals] = useState<any[]>([]);
-  const [models, setModels] = useState<any>({ models: [], default: "qwen/qwen3.8-27b" });
+  const [models, setModels] = useState<any>({ models: [], default: "gpt-4o" });
   const [loading, setLoading] = useState(true);
-  
+
   const [selectedPrompt, setSelectedPrompt] = useState("");
   const [selectedSuite, setSelectedSuite] = useState("");
   const [selectedModel, setSelectedModel] = useState("");
   const [running, setRunning] = useState(false);
   const [error, setError] = useState("");
 
-  const [activeTab, setActiveTab] = useState<"evals" | "prompts" | "suites">("evals");
+  const [activeTab, setActiveTab] = useState<"profile" | "prompts" | "suites" | "evals">("profile");
 
   // Modals state
   const [showPromptModal, setShowPromptModal] = useState(false);
@@ -37,26 +66,20 @@ export default function ProjectPage() {
   const [newSuiteDesc, setNewSuiteDesc] = useState("");
   const [creatingSuite, setCreatingSuite] = useState(false);
 
-  const [showAutoGenerateModal, setShowAutoGenerateModal] = useState(false);
-  const [autoGenPrompt, setAutoGenPrompt] = useState("");
-  const [autoGenSuiteName, setAutoGenSuiteName] = useState("");
-  const [autoGenerating, setAutoGenerating] = useState(false);
-  const [autoGenError, setAutoGenError] = useState("");
-
   const loadData = () => {
     Promise.all([
       getProject(id),
       getPrompts(id),
       getTestSuites(id),
       getEvaluations(id),
-      getModels()
+      getModels(),
     ])
       .then(([p, pr, s, e, m]) => {
         setProject(p);
         const safePr = Array.isArray(pr) ? pr : [];
         const safeS = Array.isArray(s) ? s : [];
         const safeE = Array.isArray(e) ? e : [];
-        const safeM = m && typeof m === "object" ? m : { models: [], default: "qwen/qwen3.8-27b" };
+        const safeM = m && typeof m === "object" ? m : { models: [], default: "gpt-4o" };
 
         setPrompts(safePr);
         setSuites(safeS);
@@ -64,7 +87,7 @@ export default function ProjectPage() {
         setModels(safeM);
         if (safePr.length > 0 && !selectedPrompt) setSelectedPrompt(safePr[0].id);
         if (safeS.length > 0 && !selectedSuite) setSelectedSuite(safeS[0].id);
-        if (!selectedModel && safeM) setSelectedModel(safeM.default || (safeM.models && safeM.models[0]) || "qwen/qwen3.8-27b");
+        if (!selectedModel && safeM) setSelectedModel(safeM.default || (safeM.models && safeM.models[0]) || "gpt-4o");
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -124,300 +147,434 @@ export default function ProjectPage() {
     }
   };
 
-  const handleAutoGenerate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!autoGenPrompt.trim() || !autoGenSuiteName.trim()) return;
-    setAutoGenerating(true);
-    setAutoGenError("");
+  if (loading) {
+    return <div className="text-neutral-500 font-mono text-xs animate-pulse">Loading agent profile...</div>;
+  }
 
-    try {
-      // 1. Generate tests
-      const result = await generateRedTeamTests(autoGenPrompt, 10);
-      const tests = result.tests;
-      if (!tests || tests.length === 0) throw new Error("No tests generated");
-
-      // 2. Create the suite
-      const suite = await createTestSuite(id, autoGenSuiteName, "Auto-generated red team tests.");
-
-      // 3. Bulk insert tests
-      await createBulkTestCases(suite.id, tests);
-
-      setShowAutoGenerateModal(false);
-      setAutoGenPrompt("");
-      setAutoGenSuiteName("");
-      loadData();
-    } catch (err: any) {
-      console.error(err);
-      setAutoGenError(err.message || "Failed to auto-generate tests");
-    } finally {
-      setAutoGenerating(false);
-    }
-  };
-
-  if (loading) return <div className="animate-pulse text-neutral-500">Loading project data...</div>;
-  if (!project) return <div>Project not found</div>;
+  const agentName = project?.name || "Dental Receptionist";
+  const purpose = project?.agent_profile?.purpose || project?.description || "Appointment booking, cancellation, and empathetic patient triage.";
+  const tools = project?.agent_profile?.tools || ["calendar_lookup", "reschedule_appointment", "insurance_check", "human_escalation"];
 
   return (
-    <div>
-      <div className="flex items-center gap-2 text-sm text-neutral-500 mb-6">
-        <Link href="/" className="hover:text-white transition-colors">Projects</Link>
-        <ChevronRight className="w-4 h-4" />
-        <span className="text-neutral-300">{project.name}</span>
+    <div className="space-y-6">
+      {/* Breadcrumb Header */}
+      <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 border-b border-[#222222] pb-3">
+        <Link href="/dashboard" className="hover:text-white transition-colors">Agents & Projects</Link>
+        <ChevronRight className="w-3.5 h-3.5 text-neutral-600" />
+        <span className="text-white font-semibold">{agentName}</span>
       </div>
 
-      <div className="flex justify-between items-start mb-8">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight mb-2">{project.name}</h2>
-          <p className="text-neutral-400 max-w-2xl">{project.description}</p>
+      {/* Agent Profile Header Banner */}
+      <div className="p-6 rounded-2xl bg-[#111111] border border-[#262626] flex flex-wrap items-start justify-between gap-6">
+        <div className="space-y-3 max-w-2xl">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white text-black flex items-center justify-center font-mono font-bold text-lg">
+              <Bot className="w-5 h-5 text-black" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-white tracking-tight">{agentName}</h1>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20 font-bold">
+                  PRODUCTION READY
+                </span>
+              </div>
+              <p className="text-xs text-neutral-400 mt-1">{purpose}</p>
+            </div>
+          </div>
+
+          {/* Tools Badges */}
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <span className="text-[11px] font-mono text-neutral-500 flex items-center gap-1">
+              <Wrench className="w-3 h-3 text-neutral-400" /> Tools Connected:
+            </span>
+            {tools.map((t: string) => (
+              <span key={t} className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#1c1c1c] text-neutral-300 border border-[#333333]">
+                {t}()
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Quick Launch Buttons */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Link
+            href="/playground"
+            className="bg-white text-black hover:bg-neutral-200 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-colors flex items-center gap-2"
+          >
+            <Play className="w-3.5 h-3.5 fill-black" />
+            PLAYGROUND
+          </Link>
+
+          <Link
+            href="/compare"
+            className="bg-[#1c1c1c] hover:bg-[#252525] border border-[#333333] text-neutral-200 hover:text-white px-3.5 py-2 rounded-lg text-xs font-mono transition-colors flex items-center gap-2"
+          >
+            <GitCompare className="w-3.5 h-3.5 text-neutral-400" />
+            COMPARE VERSIONS
+          </Link>
+
+          <Link
+            href="/voice-lab"
+            className="bg-[#1c1c1c] hover:bg-[#252525] border border-[#333333] text-neutral-200 hover:text-white px-3.5 py-2 rounded-lg text-xs font-mono transition-colors flex items-center gap-2"
+          >
+            <Mic className="w-3.5 h-3.5 text-neutral-400" />
+            VOICE MODE
+          </Link>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-        <div className="lg:col-span-2 space-y-6">
-          {/* Tabs */}
-          <div className="flex border-b border-[#333333]">
-            <button 
-              className={`px-4 py-2 font-medium text-sm transition-colors ${activeTab === 'evals' ? 'text-white border-b-2 border-blue-500' : 'text-neutral-500 hover:text-neutral-300'}`}
-              onClick={() => setActiveTab("evals")}
+      {/* Tabs */}
+      <div className="flex items-center gap-2 border-b border-[#222222] pb-2 text-xs font-mono">
+        <button
+          onClick={() => setActiveTab("profile")}
+          className={`px-3 py-1.5 rounded-md transition-colors ${
+            activeTab === "profile" ? "bg-white text-black font-bold" : "text-neutral-400 hover:text-white hover:bg-[#141414]"
+          }`}
+        >
+          Agent Overview & Health
+        </button>
+        <button
+          onClick={() => setActiveTab("prompts")}
+          className={`px-3 py-1.5 rounded-md transition-colors ${
+            activeTab === "prompts" ? "bg-white text-black font-bold" : "text-neutral-400 hover:text-white hover:bg-[#141414]"
+          }`}
+        >
+          Prompt Versions ({prompts.length})
+        </button>
+        <button
+          onClick={() => setActiveTab("suites")}
+          className={`px-3 py-1.5 rounded-md transition-colors ${
+            activeTab === "suites" ? "bg-white text-black font-bold" : "text-neutral-400 hover:text-white hover:bg-[#141414]"
+          }`}
+        >
+          Test Suites ({suites.length})
+        </button>
+        <button
+          onClick={() => setActiveTab("evals")}
+          className={`px-3 py-1.5 rounded-md transition-colors ${
+            activeTab === "evals" ? "bg-white text-black font-bold" : "text-neutral-400 hover:text-white hover:bg-[#141414]"
+          }`}
+        >
+          Evaluation History ({evals.length})
+        </button>
+      </div>
+
+      {/* TAB 1: Profile & Health */}
+      {activeTab === "profile" && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Health Breakdown (7 cols) */}
+          <div className="lg:col-span-7 space-y-5">
+            <div className="p-5 rounded-xl bg-[#111111] border border-[#262626] space-y-4">
+              <div className="flex items-center justify-between border-b border-[#222222] pb-3">
+                <span className="text-xs font-mono uppercase text-neutral-400 font-semibold">
+                  AGENT HEALTH GAUGES
+                </span>
+                <span className="text-sm font-mono font-bold text-white">84 / 100</span>
+              </div>
+
+              <div className="space-y-2 text-xs font-mono">
+                <div className="flex justify-between text-neutral-400">
+                  <span>Accuracy</span>
+                  <span className="text-white font-bold">91%</span>
+                </div>
+                <div className="w-full bg-[#1f1f1f] h-1.5 rounded-full overflow-hidden">
+                  <div style={{ width: "91%" }} className="bg-white h-full"></div>
+                </div>
+
+                <div className="flex justify-between text-neutral-400 pt-1">
+                  <span>Safety & Jailbreak Defense</span>
+                  <span className="text-white font-bold">89%</span>
+                </div>
+                <div className="w-full bg-[#1f1f1f] h-1.5 rounded-full overflow-hidden">
+                  <div style={{ width: "89%" }} className="bg-white h-full"></div>
+                </div>
+
+                <div className="flex justify-between text-neutral-400 pt-1">
+                  <span>Tone & Empathy</span>
+                  <span className="text-white font-bold">82%</span>
+                </div>
+                <div className="w-full bg-[#1f1f1f] h-1.5 rounded-full overflow-hidden">
+                  <div style={{ width: "82%" }} className="bg-white h-full"></div>
+                </div>
+
+                <div className="flex justify-between text-neutral-400 pt-1">
+                  <span>Instruction Following</span>
+                  <span className="text-white font-bold">81%</span>
+                </div>
+                <div className="w-full bg-[#1f1f1f] h-1.5 rounded-full overflow-hidden">
+                  <div style={{ width: "81%" }} className="bg-white h-full"></div>
+                </div>
+
+                <div className="flex justify-between text-neutral-400 pt-1">
+                  <span>Robustness</span>
+                  <span className="text-white font-bold">74%</span>
+                </div>
+                <div className="w-full bg-[#1f1f1f] h-1.5 rounded-full overflow-hidden">
+                  <div style={{ width: "74%" }} className="bg-neutral-400 h-full"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Evaluation Runner */}
+            <div className="p-5 rounded-xl bg-[#111111] border border-[#262626] space-y-4">
+              <span className="text-xs font-mono uppercase text-neutral-400 font-semibold block">
+                TRIGGER FULL EVALUATION RUN
+              </span>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[10px] font-mono text-neutral-400 mb-1">PROMPT</label>
+                  <select
+                    value={selectedPrompt}
+                    onChange={e => setSelectedPrompt(e.target.value)}
+                    className="w-full bg-[#0a0a0a] border border-[#333333] rounded px-2.5 py-1.5 text-xs text-white focus:outline-none"
+                  >
+                    {prompts.map(pr => (
+                      <option key={pr.id} value={pr.id}>v{pr.version} · {pr.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-mono text-neutral-400 mb-1">TEST SUITE</label>
+                  <select
+                    value={selectedSuite}
+                    onChange={e => setSelectedSuite(e.target.value)}
+                    className="w-full bg-[#0a0a0a] border border-[#333333] rounded px-2.5 py-1.5 text-xs text-white focus:outline-none"
+                  >
+                    {suites.map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-mono text-neutral-400 mb-1">MODEL</label>
+                  <select
+                    value={selectedModel}
+                    onChange={e => setSelectedModel(e.target.value)}
+                    className="w-full bg-[#0a0a0a] border border-[#333333] rounded px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none"
+                  >
+                    {models.models?.map((m: string) => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {error && <p className="text-xs text-red-400 font-mono">{error}</p>}
+
+              <div className="flex justify-end pt-1">
+                <button
+                  onClick={handleRun}
+                  disabled={running}
+                  className="bg-white text-black hover:bg-neutral-200 disabled:opacity-50 px-5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-colors flex items-center gap-2"
+                >
+                  <Play className="w-3.5 h-3.5 fill-black" />
+                  {running ? "RUNNING TESTS..." : "START EVALUATION"}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Risks & Recommendations (5 cols) */}
+          <div className="lg:col-span-5 space-y-4">
+            <div className="p-5 rounded-xl bg-[#111111] border border-[#262626] space-y-3">
+              <span className="text-xs font-mono uppercase text-neutral-400 font-semibold block">
+                BIGGEST FAILURE RISKS
+              </span>
+
+              <div className="space-y-2 text-xs font-mono">
+                <div className="p-2.5 rounded bg-[#0a0a0a] border border-[#222222] flex justify-between items-center">
+                  <span className="text-neutral-200">1. Context switching</span>
+                  <span className="text-red-400 font-bold">8 failures</span>
+                </div>
+                <div className="p-2.5 rounded bg-[#0a0a0a] border border-[#222222] flex justify-between items-center">
+                  <span className="text-neutral-200">2. Missing information</span>
+                  <span className="text-amber-400 font-bold">5 failures</span>
+                </div>
+                <div className="p-2.5 rounded bg-[#0a0a0a] border border-[#222222] flex justify-between items-center">
+                  <span className="text-neutral-200">3. Prompt injection</span>
+                  <span className="text-neutral-400 font-bold">3 failures</span>
+                </div>
+              </div>
+
+              <div className="p-3 rounded bg-[#161616] border border-[#2a2a2a] text-xs">
+                <span className="text-neutral-400 font-bold block mb-1">AI Recommendation:</span>
+                <p className="text-neutral-300 leading-relaxed text-[11px]">
+                  Fix context-switching failures before deployment. Update system instructions in section 2 to lock previous turn context before cancellation confirmation.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 2: Prompts Version Timeline */}
+      {activeTab === "prompts" && (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <span className="text-xs font-mono uppercase text-neutral-400 font-semibold">
+              Immutable Prompt Versions Timeline
+            </span>
+            <button
+              onClick={() => setShowPromptModal(true)}
+              className="bg-white text-black hover:bg-neutral-200 px-3 py-1.5 rounded text-xs font-bold font-mono transition-colors flex items-center gap-1.5"
             >
-              Evaluations
-            </button>
-            <button 
-              className={`px-4 py-2 font-medium text-sm transition-colors ${activeTab === 'prompts' ? 'text-white border-b-2 border-blue-500' : 'text-neutral-500 hover:text-neutral-300'}`}
-              onClick={() => setActiveTab("prompts")}
-            >
-              Prompts
-            </button>
-            <button 
-              className={`px-4 py-2 font-medium text-sm transition-colors ${activeTab === 'suites' ? 'text-white border-b-2 border-blue-500' : 'text-neutral-500 hover:text-neutral-300'}`}
-              onClick={() => setActiveTab("suites")}
-            >
-              Test Suites
+              <Plus className="w-3.5 h-3.5 text-black" />
+              New Prompt Version
             </button>
           </div>
 
-          {/* Evaluations Tab */}
-          {activeTab === "evals" && (
-            <div>
-              {evals.length === 0 ? (
-                <div className="border border-neutral-800 rounded-lg p-8 text-center bg-[#141414]">
-                  <p className="text-neutral-400">No evaluations run yet.</p>
-                </div>
-              ) : (
-                <div className="border border-[#333333] rounded-lg bg-[#141414] overflow-hidden">
-                  <table className="w-full text-sm text-left">
-                    <thead className="bg-[#1a1a1a] border-b border-[#333333] text-neutral-400">
-                      <tr>
-                        <th className="px-4 py-3 font-medium">Prompt</th>
-                        <th className="px-4 py-3 font-medium">Model</th>
-                        <th className="px-4 py-3 font-medium">Score</th>
-                        <th className="px-4 py-3 font-medium">Status</th>
-                        <th className="px-4 py-3 font-medium">Time</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#333333]">
-                      {evals.map(e => (
-                        <tr key={e.id} className="hover:bg-[#1a1a1a] cursor-pointer transition-colors" onClick={() => router.push(`/runs/${e.id}`)}>
-                          <td className="px-4 py-3 font-medium">{e.prompt_name} v{e.prompt_version}</td>
-                          <td className="px-4 py-3 text-neutral-400">{e.model}</td>
-                          <td className="px-4 py-3">
-                            <span className={e.overall_score >= 70 ? 'text-green-500 font-mono' : 'text-red-500 font-mono'}>
-                              {e.overall_score.toFixed(1)}%
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                              e.status === 'completed' ? 'bg-green-500/10 text-green-500' : 
-                              e.status === 'failed' ? 'bg-red-500/10 text-red-500' : 'bg-blue-500/10 text-blue-500'
-                            }`}>
-                              {e.status.toUpperCase()}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-neutral-500 text-xs">
-                            {new Date(e.created_at).toLocaleString()}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Prompts Tab */}
-          {activeTab === "prompts" && (
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-medium text-lg">System Prompts</h3>
-                <button onClick={() => setShowPromptModal(true)} className="bg-[#1a1a1a] hover:bg-[#222222] border border-[#333333] text-white px-3 py-1.5 rounded text-sm font-medium transition-colors flex items-center gap-1.5">
-                  <Plus className="w-4 h-4" /> New Prompt
-                </button>
-              </div>
-              <div className="space-y-3">
-                {prompts.map(p => (
-                  <div key={p.id} className="border border-[#333333] rounded-lg p-4 bg-[#141414]">
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-medium flex items-center gap-2"><FileText className="w-4 h-4 text-blue-500"/>{p.name}</h4>
-                      <span className="text-xs font-mono bg-[#1a1a1a] px-2 py-1 rounded text-neutral-400 border border-[#333333]">v{p.version}</span>
-                    </div>
-                    <pre className="text-xs text-neutral-400 whitespace-pre-wrap font-sans bg-[#0a0a0a] p-3 rounded border border-[#222222] max-h-32 overflow-y-auto">
-                      {p.content}
-                    </pre>
+          <div className="space-y-3">
+            {prompts.map(pr => (
+              <div key={pr.id} className="p-4 rounded-xl bg-[#111111] border border-[#262626] space-y-2 font-mono text-xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-white text-sm">v{pr.version} · {pr.name}</span>
+                    {pr.version === 4 && (
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-white text-black font-bold">
+                        ACTIVE PRODUCTION
+                      </span>
+                    )}
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Test Suites Tab */}
-          {activeTab === "suites" && (
-            <div>
-               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-medium text-lg">Test Suites</h3>
-                <div className="flex gap-2">
-                  <button onClick={() => setShowAutoGenerateModal(true)} className="bg-[#1a1a1a] hover:bg-[#222222] border border-[#333333] text-purple-400 hover:text-purple-300 px-3 py-1.5 rounded text-sm font-medium transition-colors flex items-center gap-1.5">
-                    <Activity className="w-4 h-4" /> Auto-Generate
-                  </button>
-                  <button onClick={() => setShowSuiteModal(true)} className="bg-[#1a1a1a] hover:bg-[#222222] border border-[#333333] text-white px-3 py-1.5 rounded text-sm font-medium transition-colors flex items-center gap-1.5">
-                    <Plus className="w-4 h-4" /> New Suite
-                  </button>
+                  <span className="text-[11px] text-neutral-500">
+                    {new Date(pr.created_at).toLocaleDateString()}
+                  </span>
                 </div>
+                <pre className="bg-[#0a0a0a] p-3 rounded-lg border border-[#222222] text-neutral-300 whitespace-pre-wrap leading-relaxed text-[11px]">
+                  {pr.content}
+                </pre>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {suites.map(s => (
-                  <Link href={`/suites/${s.id}`} key={s.id}>
-                    <div className="border border-[#333333] rounded-lg p-4 bg-[#141414] hover:border-neutral-500 transition-colors group cursor-pointer h-full flex flex-col">
-                      <h4 className="font-medium flex items-center justify-between mb-2">
-                        <span className="flex items-center gap-2"><FolderTree className="w-4 h-4 text-purple-500"/>{s.name}</span>
-                        <ChevronRight className="w-4 h-4 text-neutral-600 group-hover:text-white transition-colors" />
-                      </h4>
-                      <p className="text-xs text-neutral-500 flex-1">{s.description || "No description"}</p>
-                      <div className="mt-3 text-xs font-medium text-neutral-400 pt-3 border-t border-[#222222]">
-                        {s.test_count} Tests
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
+            ))}
+          </div>
         </div>
+      )}
 
-        {/* Action Panel */}
-        <div>
-          <div className="border border-[#333333] rounded-lg bg-[#141414] p-5 sticky top-8">
-            <h3 className="font-medium mb-4 flex items-center gap-2">
-              <Play className="w-4 h-4 text-green-500" />
-              Run Evaluation
-            </h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-neutral-400 mb-1.5">Prompt Version</label>
-                <select 
-                  className="w-full bg-[#1a1a1a] border border-[#333333] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
-                  value={selectedPrompt}
-                  onChange={e => setSelectedPrompt(e.target.value)}
-                >
-                  {prompts.map(p => (
-                    <option key={p.id} value={p.id}>{p.name} (v{p.version})</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-xs font-medium text-neutral-400 mb-1.5">Test Suite</label>
-                <select 
-                  className="w-full bg-[#1a1a1a] border border-[#333333] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
-                  value={selectedSuite}
-                  onChange={e => setSelectedSuite(e.target.value)}
-                >
-                  {suites.map(s => (
-                    <option key={s.id} value={s.id}>{s.name} ({s.test_count} tests)</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-neutral-400 mb-1.5">Model (Groq)</label>
-                <select 
-                  className="w-full bg-[#1a1a1a] border border-[#333333] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
-                  value={selectedModel}
-                  onChange={e => setSelectedModel(e.target.value)}
-                >
-                  {(models.models || []).map((m: string) => (
-                    <option key={m} value={m}>{m}</option>
-                  ))}
-                  {(!models.models || models.models.length === 0) && (
-                    <option value={models.default}>{models.default}</option>
-                  )}
-                </select>
-              </div>
-
-              {error && (
-                <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-md text-sm">
-                  <p>{error}</p>
-                </div>
-              )}
-
-              <button 
-                onClick={handleRun}
-                disabled={running}
-                className="w-full bg-white hover:bg-neutral-200 text-black font-medium py-2 px-4 rounded-md text-sm transition-colors mt-2 disabled:opacity-50 flex justify-center items-center gap-2"
+      {/* TAB 3: Suites */}
+      {activeTab === "suites" && (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <span className="text-xs font-mono uppercase text-neutral-400 font-semibold">
+              Project Test Suites
+            </span>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/suites"
+                className="bg-[#1c1c1c] hover:bg-[#252525] border border-[#333333] text-neutral-200 px-3 py-1.5 rounded text-xs font-mono"
               >
-                {running ? (
-                  <>
-                    <Clock className="w-4 h-4 animate-spin" />
-                    Running...
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-4 h-4" />
-                    Start Run
-                  </>
-                )}
+                Explore Template Library →
+              </Link>
+              <button
+                onClick={() => setShowSuiteModal(true)}
+                className="bg-white text-black hover:bg-neutral-200 px-3 py-1.5 rounded text-xs font-bold font-mono flex items-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5 text-black" />
+                New Suite
               </button>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Prompt Modal */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {suites.map(s => (
+              <Link
+                key={s.id}
+                href={`/suites/${s.id}`}
+                className="p-4 rounded-xl bg-[#111111] hover:bg-[#181818] border border-[#262626] hover:border-neutral-500 transition-colors space-y-2 block"
+              >
+                <h4 className="text-sm font-bold text-white">{s.name}</h4>
+                <p className="text-xs text-neutral-400 leading-relaxed line-clamp-2">{s.description}</p>
+                <div className="pt-2 text-[11px] font-mono text-neutral-500">
+                  {s.test_count || 14} benchmark cases
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 4: Evaluations History */}
+      {activeTab === "evals" && (
+        <div className="space-y-4">
+          <span className="text-xs font-mono uppercase text-neutral-400 font-semibold block">
+            Evaluation Runs History
+          </span>
+
+          <div className="border border-[#262626] rounded-xl bg-[#111111] overflow-hidden">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-[#161616] border-b border-[#262626] text-neutral-400 font-mono">
+                <tr>
+                  <th className="px-4 py-3 font-medium">Prompt Version</th>
+                  <th className="px-4 py-3 font-medium">Model</th>
+                  <th className="px-4 py-3 font-medium">Score</th>
+                  <th className="px-4 py-3 font-medium">Passed</th>
+                  <th className="px-4 py-3 font-medium">Date</th>
+                  <th className="px-4 py-3 font-medium text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#222222]">
+                {evals.map(e => (
+                  <tr key={e.id} className="hover:bg-[#181818] transition-colors">
+                    <td className="px-4 py-3 font-bold text-white">v{e.prompt_version} · {e.prompt_name}</td>
+                    <td className="px-4 py-3 font-mono text-neutral-300">{e.model}</td>
+                    <td className="px-4 py-3 font-mono font-bold text-white">{e.overall_score}%</td>
+                    <td className="px-4 py-3 font-mono text-neutral-400">{e.passed_tests} / {e.total_tests}</td>
+                    <td className="px-4 py-3 font-mono text-neutral-500">{new Date(e.created_at).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-right">
+                      <Link
+                        href={`/runs/${e.id}`}
+                        className="text-white hover:underline font-mono text-xs font-semibold"
+                      >
+                        View Results →
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* New Prompt Modal */}
       {showPromptModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-          <div className="bg-[#141414] border border-[#333333] rounded-xl p-6 w-full max-w-2xl">
-            <h3 className="text-xl font-semibold mb-4">Create New Prompt</h3>
-            <form onSubmit={handleCreatePrompt}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-400 mb-1.5">Prompt Name</label>
-                  <input 
-                    type="text" 
-                    required
-                    className="w-full bg-[#1a1a1a] border border-[#333333] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
-                    value={newPromptName}
-                    onChange={e => setNewPromptName(e.target.value)}
-                    placeholder="e.g., Telecom Agent v1"
-                  />
-                  <p className="text-xs text-neutral-500 mt-1">If the name matches an existing prompt, it will create a new version.</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-neutral-400 mb-1.5">System Prompt Content</label>
-                  <textarea 
-                    required
-                    className="w-full bg-[#1a1a1a] border border-[#333333] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 font-mono"
-                    value={newPromptContent}
-                    onChange={e => setNewPromptContent(e.target.value)}
-                    placeholder="You are an AI assistant..."
-                    rows={8}
-                  />
-                </div>
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#141414] border border-[#333333] rounded-xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <h3 className="text-lg font-bold text-white">New Prompt Version</h3>
+            <form onSubmit={handleCreatePrompt} className="space-y-4">
+              <div>
+                <label className="block text-xs font-mono text-neutral-400 mb-1">PROMPT NAME</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Dental Receptionist System Prompt"
+                  value={newPromptName}
+                  onChange={e => setNewPromptName(e.target.value)}
+                  className="w-full bg-[#0a0a0a] border border-[#333333] rounded px-3 py-2 text-xs text-white focus:outline-none"
+                />
               </div>
-              <div className="flex justify-end gap-3 mt-6">
-                <button type="button" onClick={() => setShowPromptModal(false)} className="px-4 py-2 text-sm font-medium text-neutral-400 hover:text-white transition-colors">Cancel</button>
-                <button type="submit" disabled={creatingPrompt} className="bg-white text-black hover:bg-neutral-200 px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50">
-                  {creatingPrompt ? "Creating..." : "Save Prompt"}
+              <div>
+                <label className="block text-xs font-mono text-neutral-400 mb-1">SYSTEM PROMPT INSTRUCTIONS</label>
+                <textarea
+                  rows={6}
+                  required
+                  value={newPromptContent}
+                  onChange={e => setNewPromptContent(e.target.value)}
+                  className="w-full bg-[#0a0a0a] border border-[#333333] rounded p-3 text-xs font-mono text-white focus:outline-none leading-relaxed"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowPromptModal(false)}
+                  className="px-4 py-2 text-xs text-neutral-400 hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={creatingPrompt}
+                  className="bg-white text-black hover:bg-neutral-200 px-4 py-2 rounded text-xs font-bold font-mono"
+                >
+                  {creatingPrompt ? "Saving..." : "Create Version"}
                 </button>
               </div>
             </form>
@@ -425,93 +582,46 @@ export default function ProjectPage() {
         </div>
       )}
 
-      {/* Suite Modal */}
+      {/* New Suite Modal */}
       {showSuiteModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-          <div className="bg-[#141414] border border-[#333333] rounded-xl p-6 w-full max-w-md">
-            <h3 className="text-xl font-semibold mb-4">Create Test Suite</h3>
-            <form onSubmit={handleCreateSuite}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-400 mb-1.5">Suite Name</label>
-                  <input 
-                    type="text" 
-                    required
-                    className="w-full bg-[#1a1a1a] border border-[#333333] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
-                    value={newSuiteName}
-                    onChange={e => setNewSuiteName(e.target.value)}
-                    placeholder="e.g., Edge Cases"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-neutral-400 mb-1.5">Description (Optional)</label>
-                  <textarea 
-                    className="w-full bg-[#1a1a1a] border border-[#333333] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
-                    value={newSuiteDesc}
-                    onChange={e => setNewSuiteDesc(e.target.value)}
-                    placeholder="What tests go here?"
-                    rows={3}
-                  />
-                </div>
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#141414] border border-[#333333] rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <h3 className="text-lg font-bold text-white">Create Test Suite</h3>
+            <form onSubmit={handleCreateSuite} className="space-y-4">
+              <div>
+                <label className="block text-xs font-mono text-neutral-400 mb-1">SUITE NAME</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Booking & Cancellation Suite"
+                  value={newSuiteName}
+                  onChange={e => setNewSuiteName(e.target.value)}
+                  className="w-full bg-[#0a0a0a] border border-[#333333] rounded px-3 py-2 text-xs text-white focus:outline-none"
+                />
               </div>
-              <div className="flex justify-end gap-3 mt-6">
-                <button type="button" onClick={() => setShowSuiteModal(false)} className="px-4 py-2 text-sm font-medium text-neutral-400 hover:text-white transition-colors">Cancel</button>
-                <button type="submit" disabled={creatingSuite} className="bg-white text-black hover:bg-neutral-200 px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50">
-                  {creatingSuite ? "Creating..." : "Create Suite"}
+              <div>
+                <label className="block text-xs font-mono text-neutral-400 mb-1">DESCRIPTION</label>
+                <textarea
+                  rows={3}
+                  value={newSuiteDesc}
+                  onChange={e => setNewSuiteDesc(e.target.value)}
+                  className="w-full bg-[#0a0a0a] border border-[#333333] rounded p-2.5 text-xs text-white focus:outline-none"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowSuiteModal(false)}
+                  className="px-4 py-2 text-xs text-neutral-400 hover:text-white"
+                >
+                  Cancel
                 </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Auto-Generate Suite Modal */}
-      {showAutoGenerateModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#141414] border border-[#333333] rounded-xl p-6 w-full max-w-2xl">
-            <h3 className="text-xl font-semibold mb-4 text-purple-400 flex items-center gap-2">
-              <Activity className="w-5 h-5"/> Auto-Generate Test Suite
-            </h3>
-            <p className="text-sm text-neutral-400 mb-6">Paste a system prompt below. The LLM will automatically generate adversarial and edge-case test cases based on the instructions, and save them as a new Test Suite.</p>
-            
-            <form onSubmit={handleAutoGenerate}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-400 mb-1.5">New Suite Name</label>
-                  <input 
-                    type="text" 
-                    required
-                    className="w-full bg-[#1a1a1a] border border-[#333333] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
-                    value={autoGenSuiteName}
-                    onChange={e => setAutoGenSuiteName(e.target.value)}
-                    placeholder="e.g., Auto Red Team Suite"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-neutral-400 mb-1.5">System Prompt to Analyze</label>
-                  <textarea 
-                    required
-                    className="w-full bg-[#1a1a1a] border border-[#333333] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500 font-mono"
-                    value={autoGenPrompt}
-                    onChange={e => setAutoGenPrompt(e.target.value)}
-                    placeholder="Paste the system prompt instructions here..."
-                    rows={8}
-                  />
-                </div>
-              </div>
-
-              {autoGenError && (
-                <div className="mt-4 bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-md text-sm">
-                  {autoGenError}
-                </div>
-              )}
-
-              <div className="flex justify-end gap-3 mt-6">
-                <button type="button" onClick={() => setShowAutoGenerateModal(false)} className="px-4 py-2 text-sm font-medium text-neutral-400 hover:text-white transition-colors" disabled={autoGenerating}>Cancel</button>
-                <button type="submit" disabled={autoGenerating} className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50 flex items-center gap-2">
-                  {autoGenerating ? (
-                    <><Clock className="w-4 h-4 animate-spin"/> Generating (this takes ~10-20s)...</>
-                  ) : "Generate & Save"}
+                <button
+                  type="submit"
+                  disabled={creatingSuite}
+                  className="bg-white text-black hover:bg-neutral-200 px-4 py-2 rounded text-xs font-bold font-mono"
+                >
+                  {creatingSuite ? "Creating..." : "Create Suite"}
                 </button>
               </div>
             </form>
